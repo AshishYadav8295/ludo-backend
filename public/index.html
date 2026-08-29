@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Adda - Play & Earn</title>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wallet-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #eef2ff;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #4f46e5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #3730a3;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .custom-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .room-code-box {
+            background: #ecfdf5;
+            border: 1px dashed #10b981;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .room-code-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: #047857;
+            letter-spacing: 2px;
+            margin: 6px 0 12px 0;
+            word-break: break-all;
+        }
+
+        .btn-open-app {
+            display: inline-block;
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-win {
+            flex: 1;
+            padding: 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-lose {
+            flex: 1;
+            padding: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.25);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-chess-king" style="color: #fbbf24;"></i> Ludo Adda
+            </div>
+            <div class="header-actions">
+                <div class="wallet-badge">
+                    <i class="fa-solid fa-wallet" style="color: #fbbf24;"></i> 
+                    ₹<span id="user-balance">0</span>
+                </div>
+                <button id="logout-btn" class="btn-logout hidden" onclick="logoutUser()"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <!-- 1. Authentication / Login Card -->
+            <div id="auth-card" class="card">
+                <h3>Login / Register</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Enter your phone number to continue</p>
+                <input type="tel" id="phone-input" class="custom-input" placeholder="Enter 10-digit Phone Number" maxlength="10">
+                <button type="button" onclick="loginUser()" class="btn-primary">Continue</button>
+            </div>
+
+            <!-- Main App Nav Tabs -->
+            <div id="main-nav" class="nav-tabs hidden">
+                <button class="tab-btn active" onclick="showSection('lobby')">Battles</button>
+                <button class="tab-btn" onclick="showSection('withdraw')">Withdraw</button>
+                <button class="tab-btn" onclick="showSection('history')">Passbook</button>
+            </div>
+
+            <!-- 2. Battles Lobby Card -->
+            <div id="lobby-card" class="hidden">
+                <div class="card">
+                    <h3>Create Challenge</h3>
+                    <input type="number" id="battle-amount" class="custom-input" placeholder="Amount (Min ₹10)">
+                    <button type="button" onclick="createBattle()" class="btn-primary">Create Battle</button>
+                </div>
+
+                <div class="card">
+                    <h3>Open Battles</h3>
+                    <div id="battles-list">
+                        <p style="color: #9ca3af; font-size: 14px;">Loading battles...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Match Started / Room Code Card -->
+            <div id="room-card" class="card hidden">
+                <h3><i class="fa-solid fa-gamepad" style="color: #4f46e5;"></i> Match Started!</h3>
+                <p style="margin-bottom: 12px; font-weight: 500;">Battle Amount: ₹<span id="match-amount" style="color: #10b981;">0</span></p>
+                
+                <!-- Room Code Input Section -->
+                <div id="room-code-input-section">
+                    <input type="text" id="room-code-input" class="custom-input" placeholder="Enter Ludo King Room Code">
+                    <button type="button" id="submit-room-code-btn" onclick="submitRoomCode()" class="btn-primary">
+                        Submit Room Code
+                    </button>
+                </div>
+
+                <!-- Room Code Display & Play Controls -->
+                <div id="submitted-room-code-container" class="room-code-box" style="display: none;">
+                    <span style="font-size: 12px; color: #065f46; font-weight: 600; text-transform: uppercase;">Room Code</span>
+                    <div id="display-room-code" class="room-code-text">------</div>
+                    
+                    <a href="intent://ludo/#Intent;scheme=ludoking;package=com.ludo.king;end" target="_blank" class="btn-open-app">
+                        <i class="fa-solid fa-play"></i> Open Ludo King App
+                    </a>
+
+                    <!-- Result Actions -->
+                    <div class="result-actions">
+                        <button type="button" onclick="showWinUploadSection()" class="btn-win"><i class="fa-solid fa-trophy"></i> I Won</button>
+                        <button type="button" onclick="submitResult('lose')" class="btn-lose"><i class="fa-solid fa-thumbs-down"></i> I Lost</button>
+                    </div>
+
+                    <!-- Screenshot Upload Box for Win -->
+                    <div id="win-upload-section" style="display: none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 12px; text-align: left;">
+                        <label style="font-size: 13px; font-weight: 600; color: #374151;">Upload Winning Screenshot:</label>
+                        <input type="file" id="screenshot-file" accept="image/*" class="custom-input" style="margin-top: 6px;">
+                        <button type="button" onclick="submitResult('win')" class="btn-primary" style="background: #10b981;">
+                            Submit Proof & Claim Win
+                        </button>
+                    </div>
+
+                    <!-- Cancel Match Button -->
+                    <button type="button" onclick="cancelMatch()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fa-solid fa-xmark"></i> Cancel Match
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Withdraw Card -->
+            <div id="withdraw-card" class="card hidden">
+                <h3>Withdraw Earnings</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Transfer money directly to your UPI ID</p>
+                <input type="text" class="custom-input" placeholder="Enter UPI ID (e.g. user@upi)">
+                <input type="number" class="custom-input" placeholder="Amount">
+                <button type="button" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">Withdraw Now</button>
+            </div>
+
+            <!-- 5. History / Passbook Card -->
+            <div id="history-card" class="card hidden">
+                <h3>Transaction History</h3>
+                <p style="color: #9ca3af; font-size: 14px;">No recent transactions.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Socket.io & App JS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
