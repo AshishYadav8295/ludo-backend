@@ -213,21 +213,42 @@ router.post('/approve-win', async (req, res) => {
     }
 });
 
-// 7. Submit Result Route (Base64 Database Storage)
+// 7. Submit Result Route (Fixed Payload & Status Update)
 router.post('/submit-result', async (req, res) => {
     try {
         const { gameId, status, screenshot } = req.body;
-        
-        await Game.findByIdAndUpdate(gameId, {
-            resultStatus: status.toUpperCase(),
-            status: 'review',
-            screenshot: screenshot || ""
-        });
 
-        return res.json({ success: true, message: 'Result submitted for review!' });
+        if (!gameId) {
+            return res.status(400).json({ success: false, message: 'Game ID missing in request!' });
+        }
+
+        const updateData = {
+            status: 'review',
+            resultStatus: (status || 'WIN').toUpperCase()
+        };
+
+        if (screenshot) {
+            updateData.screenshot = screenshot;
+        }
+
+        const updatedGame = await Game.findByIdAndUpdate(
+            gameId,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedGame) {
+            return res.status(404).json({ success: false, message: 'Game not found!' });
+        }
+
+        return res.json({ 
+            success: true, 
+            message: 'Result submitted for review successfully!',
+            game: updatedGame 
+        });
     } catch (error) {
         console.error('Submit Result Error:', error);
-        return res.status(500).json({ success: false, message: 'Server error saving screenshot.' });
+        return res.status(500).json({ success: false, message: 'Server error saving screenshot: ' + error.message });
     }
 });
 
