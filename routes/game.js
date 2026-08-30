@@ -149,4 +149,15 @@ router.post('/submit-room-code', async (req, res) => {
     }
 });
 
+// 5. Fetch Pending Admin Reviews
+router.get('/pending-results', async (req, res) => {
+    try {
+        const pendingGames = await Game.find({ status: { $in: ['running', 'review'] } }).sort({ updatedAt: -1 });
+        return res.json({ success: true, games: pendingGames });
+    } catch (error) {
+        console.error('Fetch Pending Results Error:', error);
+        return res.status(500).json({ success: false, message: 'Server error loading pending reviews.' });
+    }
+});
+
 module.exports = router;

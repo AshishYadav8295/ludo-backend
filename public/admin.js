@@ -2,7 +2,7 @@ const socket = io(window.location.origin);
 
 async function loadPendingResults() {
     try {
-        const res = await fetch('/api/game/admin/pending');
+        const res = await fetch('/api/game/pending-results');
         const data = await res.json();
 
         const container = document.getElementById('pending-results-container') || document.body;
