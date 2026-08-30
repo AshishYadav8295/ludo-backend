@@ -166,11 +166,15 @@ router.post('/submit-room-code', async (req, res) => {
 // 5. Fetch Pending Admin Reviews
 router.get('/pending-results', async (req, res) => {
     try {
-        const pendingGames = await Game.find({ status: { $in: ['running', 'review'] } }).sort({ updatedAt: -1 });
-        return res.json({ success: true, games: pendingGames });
+        const games = await Game.find({ status: 'review' })
+            .populate('createdBy', 'phone')
+            .populate('joinedBy', 'phone')
+            .sort({ updatedAt: -1 });
+
+        return res.json({ success: true, games });
     } catch (error) {
-        console.error('Fetch Pending Results Error:', error);
-        return res.status(500).json({ success: false, message: 'Server error loading pending reviews.' });
+        console.error('Pending Results Fetch Error:', error);
+        return res.status(500).json({ success: false, message: 'Failed to fetch pending reviews' });
     }
 });
 
@@ -219,36 +223,27 @@ router.post('/submit-result', async (req, res) => {
         const { gameId, status, screenshot } = req.body;
 
         if (!gameId) {
-            return res.status(400).json({ success: false, message: 'Game ID missing in request!' });
-        }
-
-        const updateData = {
-            status: 'review',
-            resultStatus: (status || 'WIN').toUpperCase()
-        };
-
-        if (screenshot) {
-            updateData.screenshot = screenshot;
+            return res.status(400).json({ success: false, message: 'Game ID missing!' });
         }
 
         const updatedGame = await Game.findByIdAndUpdate(
             gameId,
-            updateData,
-            { new: true }
+            {
+                status: 'review',
+                resultStatus: (status || 'WIN').toUpperCase(),
+                screenshot: screenshot || ""
+            },
+            { new: true, runValidators: false }
         );
 
         if (!updatedGame) {
             return res.status(404).json({ success: false, message: 'Game not found!' });
         }
 
-        return res.json({ 
-            success: true, 
-            message: 'Result submitted for review successfully!',
-            game: updatedGame 
-        });
+        return res.json({ success: true, message: 'Result submitted successfully!', game: updatedGame });
     } catch (error) {
         console.error('Submit Result Error:', error);
-        return res.status(500).json({ success: false, message: 'Server error saving screenshot: ' + error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 });
 

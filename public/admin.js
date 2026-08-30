@@ -8,7 +8,7 @@ async function loadPendingResults() {
         const container = document.getElementById('pending-results-container') || document.body;
 
         if (!data.games || data.games.length === 0) {
-            container.innerHTML = '<p style="padding:10px;">Koi pending review match nahi hai.</p>';
+            container.innerHTML = '<p style="padding:15px; font-weight: bold;">Koi pending review match nahi hai.</p>';
             return;
         }
 
@@ -18,52 +18,39 @@ async function loadPendingResults() {
             const card = document.createElement('div');
             card.style.cssText = 'border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);';
             
+            const creatorPhone = game.creatorPhone || (game.createdBy ? game.createdBy.phone : 'N/A');
+            const accepterPhone = game.accepterPhone || (game.joinedBy ? game.joinedBy.phone : 'N/A');
+            const currentStatus = game.resultStatus || 'PENDING';
+
             let statusColor = '#007bff';
-            if (game.resultStatus === 'WIN') statusColor = '#28a745';
-            if (game.resultStatus === 'LOSE') statusColor = '#dc3545';
-            if (game.resultStatus === 'CANCEL') statusColor = '#6c757d';
+            if (currentStatus === 'WIN') statusColor = '#28a745';
+            if (currentStatus === 'LOSE') statusColor = '#dc3545';
+            if (currentStatus === 'CANCEL') statusColor = '#6c757d';
 
-            let actionButtons = '';
-            
-            if (game.resultStatus === 'WIN') {
-                actionButtons = `
-                    <button onclick="approveWin('${game._id}', 'WIN')" style="background-color: #28a745; color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;">
-                        🏆 Approve Winner & Pay Balance
-                    </button>
-                `;
-            } else if (game.resultStatus === 'LOSE') {
-                actionButtons = `
-                    <button onclick="approveWin('${game._id}', 'LOSE')" style="background-color: #28a745; color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;">
-                        🤝 Opponent Ko Winner Banao & Pay Karein
-                    </button>
-                `;
-            } else if (game.resultStatus === 'CANCEL') {
-                actionButtons = `
-                    <button onclick="cancelMatch('${game._id}')" style="background-color: #dc3545; color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;">
-                        ⚠️ Match Cancel Karein (Refund Money)
-                    </button>
-                `;
-            }
-
-            // Proof Screenshot Render Block
-            const screenshotHtml = (game.screenshot && game.screenshot.trim() !== '') 
+            // Fixed: Check length > 3 to support paths like "/uploads/a.png" as well as Base64 DataURIs
+            const screenshotHtml = (game.screenshot && game.screenshot.trim().length > 3) 
                 ? `<p><strong>Proof Screenshot:</strong><br>
                     <a href="${game.screenshot}" target="_blank">
-                        <img src="${game.screenshot}" style="max-width: 280px; width: 100%; border-radius: 6px; margin-top: 5px; border:1px solid #ccc;" />
+                        <img src="${game.screenshot}" style="max-width: 280px; width: 100%; border-radius: 6px; margin-top: 5px; border: 2px solid #28a745;" />
                     </a></p>`
                 : '<p style="color:red; font-weight:bold;">No Screenshot Uploaded</p>';
 
             card.innerHTML = `
                 <p><strong>Game ID:</strong> ${game._id}</p>
                 <p><strong>Amount:</strong> ₹${game.amount}</p>
-                <p><strong>Claimed Status:</strong> <span style="color:${statusColor}; font-weight:bold; font-size: 16px;">${game.resultStatus || 'N/A'}</span></p>
-                <p><strong>Creator (Host):</strong> ${game.creatorPhone || (game.creator ? game.creator.phone : 'N/A')}</p>
-                <p><strong>Accepter (Opponent):</strong> ${game.accepter ? game.accepter.phone : 'N/A'}</p>
+                <p><strong>Claimed Status:</strong> <span style="color:${statusColor}; font-weight:bold;">${currentStatus}</span></p>
+                <p><strong>Creator (Host):</strong> ${creatorPhone}</p>
+                <p><strong>Accepter (Opponent):</strong> ${accepterPhone}</p>
                 
                 ${screenshotHtml}
                 
                 <div style="margin-top: 10px;">
-                    ${actionButtons}
+                    <button onclick="approveWin('${game._id}', '${currentStatus}')" style="background-color: #28a745; color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        🏆 Approve & Pay Winner
+                    </button>
+                    <button onclick="cancelMatch('${game._id}')" style="background-color: #dc3545; color: white; border: none; padding: 10px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px;">
+                        ⚠️ Cancel Match
+                    </button>
                 </div>
             `;
             container.appendChild(card);
@@ -120,8 +107,6 @@ async function cancelMatch(gameId) {
     }
 }
 
-socket.on('resultSubmitted', () => {
-    loadPendingResults();
-});
-
+// Global Event Listeners (Single execution)
+socket.on('resultSubmitted', loadPendingResults);
 window.onload = loadPendingResults;
