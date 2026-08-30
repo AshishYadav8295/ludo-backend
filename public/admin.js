@@ -45,19 +45,22 @@ async function loadPendingResults() {
                 `;
             }
 
+            // Proof Screenshot Render Block
+            const screenshotHtml = (game.screenshot && game.screenshot.trim() !== '') 
+                ? `<p><strong>Proof Screenshot:</strong><br>
+                    <a href="${game.screenshot}" target="_blank">
+                        <img src="${game.screenshot}" style="max-width: 280px; width: 100%; border-radius: 6px; margin-top: 5px; border:1px solid #ccc;" />
+                    </a></p>`
+                : '<p style="color:red; font-weight:bold;">No Screenshot Uploaded</p>';
+
             card.innerHTML = `
                 <p><strong>Game ID:</strong> ${game._id}</p>
                 <p><strong>Amount:</strong> ₹${game.amount}</p>
                 <p><strong>Claimed Status:</strong> <span style="color:${statusColor}; font-weight:bold; font-size: 16px;">${game.resultStatus || 'N/A'}</span></p>
-                <p><strong>Creator (Host):</strong> ${game.creator ? game.creator.phone : 'N/A'}</p>
+                <p><strong>Creator (Host):</strong> ${game.creatorPhone || (game.creator ? game.creator.phone : 'N/A')}</p>
                 <p><strong>Accepter (Opponent):</strong> ${game.accepter ? game.accepter.phone : 'N/A'}</p>
                 
-                ${game.screenshot ? `
-                    <p><strong>Proof Screenshot:</strong><br>
-                    <a href="${game.screenshot}" target="_blank">
-                        <img src="${game.screenshot}" style="max-width: 250px; border-radius: 6px; margin-top: 5px; border:1px solid #ccc;" />
-                    </a></p>
-                ` : '<p style="color:red;"><em>No Screenshot Uploaded</em></p>'}
+                ${screenshotHtml}
                 
                 <div style="margin-top: 10px;">
                     ${actionButtons}
@@ -107,13 +110,13 @@ async function cancelMatch(gameId) {
 
         if (res.ok) {
             alert(data.message || 'Match successfully cancel ho gaya!');
-            loadPendingResults(); // UI Refresh karke card hata dega
+            loadPendingResults();
         } else {
             alert(data.message || 'Cancel karne mein error aaya!');
         }
     } catch (err) {
         console.error('Cancel Fetch Error:', err);
-        alert('Server connection failure! Check server logs.');
+        alert('Server connection failure!');
     }
 }
 

@@ -213,28 +213,21 @@ router.post('/approve-win', async (req, res) => {
     }
 });
 
-// 7. Submit Result with Screenshot Route
-router.post('/submit-result', upload.single('screenshot'), async (req, res) => {
+// 7. Submit Result Route (Base64 Database Storage)
+router.post('/submit-result', async (req, res) => {
     try {
-        const { gameId, status, userId } = req.body;
-        const game = await Game.findById(gameId);
-
-        if (!game) {
-            return res.status(404).json({ success: false, message: 'Game not found!' });
-        }
-
-        game.resultStatus = status.toUpperCase();
-        game.status = 'review';
+        const { gameId, status, screenshot } = req.body;
         
-        if (req.file) {
-            game.screenshot = '/uploads/' + req.file.filename;
-        }
+        await Game.findByIdAndUpdate(gameId, {
+            resultStatus: status.toUpperCase(),
+            status: 'review',
+            screenshot: screenshot || null
+        });
 
-        await game.save({ validateBeforeSave: false });
         return res.json({ success: true, message: 'Result submitted for review!' });
     } catch (error) {
         console.error('Submit Result Error:', error);
-        return res.status(500).json({ success: false, message: 'Server error uploading screenshot.' });
+        return res.status(500).json({ success: false, message: 'Server error saving screenshot.' });
     }
 });
 

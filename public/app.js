@@ -232,31 +232,42 @@ function showWinUploadSection() {
 async function submitResult(status) {
     if (!currentActiveGameId) return alert('No active match found!');
 
-    const formData = new FormData();
-    formData.append('gameId', currentActiveGameId);
-    formData.append('status', status);
-    formData.append('userId', currentUser._id);
+    let screenshotBase64 = null;
 
     if (status === 'win') {
         const fileInput = document.getElementById('screenshot-file');
         if (!fileInput || !fileInput.files[0]) {
             return alert('Please select a win screenshot proof!');
         }
-        formData.append('screenshot', fileInput.files[0]);
+
+        // Convert image file to Base64 String
+        const file = fileInput.files[0];
+        screenshotBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
     }
 
     try {
         const res = await fetch('/api/game/submit-result', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                gameId: currentActiveGameId,
+                status: status,
+                userId: currentUser._id,
+                screenshot: screenshotBase64
+            })
         });
+
         const data = await res.json();
 
         if (data.success) {
-            alert('Result submitted successfully! Waiting for admin review.');
+            alert('Result submitted successfully!');
             document.getElementById('room-card')?.classList.add('hidden');
             document.getElementById('lobby-card')?.classList.remove('hidden');
-            loadBattles();
+            if (typeof loadBattles === 'function') loadBattles();
         } else {
             alert(data.message || 'Error submitting result!');
         }
