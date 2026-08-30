@@ -160,4 +160,25 @@ router.get('/pending-results', async (req, res) => {
     }
 });
 
+// 6. Approve Win Route for Admin
+router.post('/approve-win', async (req, res) => {
+    try {
+        const { gameId } = req.body;
+        const game = await Game.findById(gameId);
+        
+        if (!game) {
+            return res.status(404).json({ success: false, message: 'Game not found!' });
+        }
+
+        game.status = 'completed';
+        game.resultStatus = 'WIN';
+        await game.save();
+
+        return res.json({ success: true, message: 'Winner approved successfully!' });
+    } catch (error) {
+        console.error('Approve Win Error:', error);
+        return res.status(500).json({ success: false, message: 'Server error approving win.' });
+    }
+});
+
 module.exports = router;
