@@ -160,7 +160,7 @@ router.get('/pending-results', async (req, res) => {
     }
 });
 
-// 6. Approve Win Route for Admin
+// 6. Approve Win Route for Admin (Direct Update Fix)
 router.post('/approve-win', async (req, res) => {
     try {
         const { gameId } = req.body;
@@ -181,15 +181,15 @@ router.post('/approve-win', async (req, res) => {
             if (winner) {
                 const prizeMoney = (game.amount * 2) * 0.95; // 5% platform fee
                 winner.winningWallet = (winner.winningWallet || 0) + prizeMoney;
-                await winner.save();
+                await winner.save({ validateBeforeSave: false });
             }
         }
 
-        game.status = 'completed';
-        game.resultStatus = 'WIN';
-        
-        // Save without failing schema validation on old test records
-        await game.save({ validateBeforeSave: false });
+        // Bypass full schema validation for old records using findByIdAndUpdate
+        await Game.findByIdAndUpdate(gameId, {
+            status: 'completed',
+            resultStatus: 'WIN'
+        });
 
         return res.json({ success: true, message: 'Winner approved and balance updated successfully!' });
 
