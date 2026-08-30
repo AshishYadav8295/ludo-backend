@@ -217,7 +217,7 @@ router.post('/approve-win', async (req, res) => {
     }
 });
 
-// 7. Submit Result Route (Fixed Payload & Status Update)
+// Submit Result with direct Base64 Storage
 router.post('/submit-result', async (req, res) => {
     try {
         const { gameId, status, screenshot } = req.body;
@@ -231,16 +231,20 @@ router.post('/submit-result', async (req, res) => {
             {
                 status: 'review',
                 resultStatus: (status || 'WIN').toUpperCase(),
-                screenshot: screenshot || ""
+                screenshot: screenshot || "" // Stores Base64 string directly
             },
-            { new: true, runValidators: false }
+            { new: true }
         );
 
         if (!updatedGame) {
             return res.status(404).json({ success: false, message: 'Game not found!' });
         }
 
-        return res.json({ success: true, message: 'Result submitted successfully!', game: updatedGame });
+        return res.json({ 
+            success: true, 
+            message: 'Result submitted successfully!', 
+            game: updatedGame 
+        });
     } catch (error) {
         console.error('Submit Result Error:', error);
         return res.status(500).json({ success: false, message: error.message });
