@@ -1,6 +1,6 @@
 const socket = io(window.location.origin);
 let currentUser = null;
-let currentActiveGameId = null;
+let currentActiveGameId = localStorage.getItem('activeGameId') || null;
 
 // Page Load Handling
 window.onload = () => {
@@ -142,6 +142,13 @@ async function createBattle() {
         if (data.success) {
             alert('Battle created!');
             amountInput.value = '';
+            
+            // Save active game ID locally for creator as well
+            if (data.game && data.game._id) {
+                currentActiveGameId = data.game._id;
+                localStorage.setItem('activeGameId', data.game._id);
+            }
+
             if (data.updatedBalance !== undefined) {
                 currentUser.balance = data.updatedBalance;
                 document.getElementById('user-balance').innerText = data.updatedBalance;
@@ -168,6 +175,8 @@ async function joinBattle(gameId) {
         const data = await res.json();
         if (data.success) {
             currentActiveGameId = data.game._id;
+            localStorage.setItem('activeGameId', data.game._id);
+
             if (data.updatedBalance !== undefined) {
                 currentUser.balance = data.updatedBalance;
                 document.getElementById('user-balance').innerText = data.updatedBalance;
@@ -186,16 +195,16 @@ async function joinBattle(gameId) {
     }
 }
 
-// *** MAIN ROOM CODE SUBMIT FUNCTION ***
 async function submitRoomCode() {
     const codeInput = document.getElementById('room-code-input');
     const roomCode = codeInput ? codeInput.value.trim() : '';
+    const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
 
     if (!roomCode) {
         return alert('Please enter a valid Room Code!');
     }
 
-    if (!currentActiveGameId) {
+    if (!activeId) {
         return alert('Active game missing! Please re-join match.');
     }
 
@@ -203,7 +212,7 @@ async function submitRoomCode() {
         const res = await fetch('/api/game/submit-room-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gameId: currentActiveGameId, roomCode: roomCode })
+            body: JSON.stringify({ gameId: activeId, roomCode: roomCode })
         });
 
         const data = await res.json();
@@ -230,7 +239,9 @@ function showWinUploadSection() {
 }
 
 async function submitResult(status) {
-    if (!currentActiveGameId) return alert('No active match found!');
+    const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
+
+    if (!activeId) return alert('No active match found!');
 
     let screenshotBase64 = "";
 
@@ -253,7 +264,7 @@ async function submitResult(status) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                gameId: currentActiveGameId,
+                gameId: activeId,
                 status: status,
                 screenshot: screenshotBase64
             })
@@ -263,7 +274,8 @@ async function submitResult(status) {
 
         if (data.success) {
             alert('Result submitted successfully!');
-            location.reload(); // Fresh update for state reset
+            localStorage.removeItem('activeGameId'); // Reset active state
+            location.reload(); 
         } else {
             alert(data.message || 'Error submitting result!');
         }
@@ -275,6 +287,7 @@ async function submitResult(status) {
 
 function cancelMatch() {
     if (confirm('Are you sure you want to cancel this match?')) {
+        localStorage.removeItem('activeGameId');
         document.getElementById('room-card')?.classList.add('hidden');
         document.getElementById('lobby-card')?.classList.remove('hidden');
         loadBattles();
