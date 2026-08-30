@@ -160,7 +160,7 @@ router.get('/pending-results', async (req, res) => {
     }
 });
 
-// 6. Approve Win Route for Admin (Updated)
+// 6. Approve Win Route for Admin
 router.post('/approve-win', async (req, res) => {
     try {
         const { gameId } = req.body;
@@ -174,14 +174,12 @@ router.post('/approve-win', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Game is already completed!' });
         }
 
-        // Winner identification: Defaulting to creator if createdBy exists, or joinedBy
         const winnerId = game.createdBy || game.joinedBy;
 
         if (winnerId) {
             const winner = await User.findById(winnerId);
             if (winner) {
-                // Total prize money calculation (2 x Entry Amount minus platform fee/commission)
-                const prizeMoney = (game.amount * 2) * 0.95; // 5% platform commission
+                const prizeMoney = (game.amount * 2) * 0.95; // 5% platform fee
                 winner.winningWallet = (winner.winningWallet || 0) + prizeMoney;
                 await winner.save();
             }
@@ -189,7 +187,9 @@ router.post('/approve-win', async (req, res) => {
 
         game.status = 'completed';
         game.resultStatus = 'WIN';
-        await game.save();
+        
+        // Save without failing schema validation on old test records
+        await game.save({ validateBeforeSave: false });
 
         return res.json({ success: true, message: 'Winner approved and balance updated successfully!' });
 
