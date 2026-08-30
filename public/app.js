@@ -140,13 +140,19 @@ async function createBattle() {
         const data = await res.json();
 
         if (data.success) {
-            alert('Battle created!');
+            alert('Battle created successfully!');
             amountInput.value = '';
             
-            // Save active game ID locally for creator as well
             if (data.game && data.game._id) {
                 currentActiveGameId = data.game._id;
                 localStorage.setItem('activeGameId', data.game._id);
+
+                // Open Room Card View for Creator
+                document.getElementById('lobby-card')?.classList.add('hidden');
+                document.getElementById('room-card')?.classList.remove('hidden');
+                if (document.getElementById('match-amount')) {
+                    document.getElementById('match-amount').innerText = data.game.amount;
+                }
             }
 
             if (data.updatedBalance !== undefined) {
@@ -195,58 +201,16 @@ async function joinBattle(gameId) {
     }
 }
 
-async function submitRoomCode() {
-    const codeInput = document.getElementById('room-code-input');
-    const roomCode = codeInput ? codeInput.value.trim() : '';
-    const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
-
-    if (!roomCode) {
-        return alert('Please enter a valid Room Code!');
-    }
-
-    if (!activeId) {
-        return alert('Active game missing! Please re-join match.');
-    }
-
-    try {
-        const res = await fetch('/api/game/submit-room-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gameId: activeId, roomCode: roomCode })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            alert('Room Code submitted successfully!');
-            document.getElementById('display-room-code').innerText = data.roomCode || roomCode;
-            document.getElementById('submitted-room-code-container').style.display = 'block';
-            document.getElementById('room-code-input-section').style.display = 'none';
-        } else {
-            alert(data.message || 'Error submitting room code!');
-        }
-    } catch (err) {
-        console.error('Submit Room Code Error:', err);
-        alert('Server Error: Room code submit nahi ho paya.');
-    }
-}
-
-function showWinUploadSection() {
-    const winSection = document.getElementById('win-upload-section');
-    if (winSection) {
-        winSection.style.display = winSection.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
+// Submit Result Function
 async function submitResult(event, status) {
-    // Prevent default form submit action (page reload stop karne ke liye)
     if (event && event.preventDefault) {
         event.preventDefault();
     }
 
     const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
-
-    if (!activeId) return alert('No active match found!');
+    if (!activeId) {
+        return alert('No active match found to submit proof!');
+    }
 
     let screenshotBase64 = "";
 
@@ -276,25 +240,27 @@ async function submitResult(event, status) {
         });
 
         const data = await res.json();
-
         if (data.success) {
             alert('Result submitted successfully!');
-            localStorage.removeItem('activeGameId'); 
-            location.reload(); 
+            localStorage.removeItem('activeGameId');
+            currentActiveGameId = null;
+            location.reload();
         } else {
             alert(data.message || 'Error submitting result!');
         }
     } catch (err) {
-        console.error('Submit Result Error:', err);
-        alert('Server error submitting result!');
+        console.error('Submit error:', err);
+        alert('Server connection error while submitting!');
     }
 }
 
+// Cancel Match Function
 function cancelMatch() {
-    if (confirm('Are you sure you want to cancel this match?')) {
+    if (confirm('Are you sure you want to cancel?')) {
         localStorage.removeItem('activeGameId');
-        document.getElementById('room-card')?.classList.add('hidden');
-        document.getElementById('lobby-card')?.classList.remove('hidden');
-        loadBattles();
+        currentActiveGameId = null;
+        if (document.getElementById('screenshot-file')) document.getElementById('screenshot-file').value = '';
+        if (document.getElementById('room-code-input')) document.getElementById('room-code-input').value = '';
+        showSection('lobby');
     }
 }

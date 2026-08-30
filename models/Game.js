@@ -17,8 +17,16 @@ const gameSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['open', 'running', 'completed', 'cancelled'],
+        enum: ['open', 'running', 'review', 'completed', 'cancelled'],
         default: 'open'
+    },
+    resultStatus: {
+        type: String,
+        default: 'PENDING'
+    },
+    screenshot: {
+        type: String,
+        default: ""
     },
     roomCode: {
         type: String,
@@ -28,6 +36,10 @@ const gameSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null
+    },
+    accepterPhone: {
+        type: String,
+        default: ""
     },
     winner: {
         type: mongoose.Schema.Types.ObjectId,
