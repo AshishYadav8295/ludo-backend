@@ -3,6 +3,20 @@ const router = express.Router();
 const User = require('../models/User');
 const Game = require('../models/Game');
 
+const multer = require('multer');
+const path = require('path');
+
+// Multer storage setup
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 // 1. Create Battle
 router.post('/create-battle', async (req, res) => {
     try {
@@ -196,6 +210,31 @@ router.post('/approve-win', async (req, res) => {
     } catch (error) {
         console.error('Approve Win Error:', error);
         return res.status(500).json({ success: false, message: 'Server error approving win: ' + error.message });
+    }
+});
+
+// 7. Submit Result with Screenshot Route
+router.post('/submit-result', upload.single('screenshot'), async (req, res) => {
+    try {
+        const { gameId, status, userId } = req.body;
+        const game = await Game.findById(gameId);
+
+        if (!game) {
+            return res.status(404).json({ success: false, message: 'Game not found!' });
+        }
+
+        game.resultStatus = status.toUpperCase();
+        game.status = 'review';
+        
+        if (req.file) {
+            game.screenshot = '/uploads/' + req.file.filename;
+        }
+
+        await game.save({ validateBeforeSave: false });
+        return res.json({ success: true, message: 'Result submitted for review!' });
+    } catch (error) {
+        console.error('Submit Result Error:', error);
+        return res.status(500).json({ success: false, message: 'Server error uploading screenshot.' });
     }
 });
 

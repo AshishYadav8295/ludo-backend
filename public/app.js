@@ -230,20 +230,40 @@ function showWinUploadSection() {
 }
 
 async function submitResult(status) {
+    if (!currentActiveGameId) return alert('No active match found!');
+
+    const formData = new FormData();
+    formData.append('gameId', currentActiveGameId);
+    formData.append('status', status);
+    formData.append('userId', currentUser._id);
+
     if (status === 'win') {
         const fileInput = document.getElementById('screenshot-file');
         if (!fileInput || !fileInput.files[0]) {
             return alert('Please select a win screenshot proof!');
         }
-        alert('Win proof submitted! Under verification by admin.');
-    } else if (status === 'lose') {
-        alert('Loss declared.');
+        formData.append('screenshot', fileInput.files[0]);
     }
-    
-    // Reset Room UI
-    document.getElementById('room-card')?.classList.add('hidden');
-    document.getElementById('lobby-card')?.classList.remove('hidden');
-    loadBattles();
+
+    try {
+        const res = await fetch('/api/game/submit-result', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert('Result submitted successfully! Waiting for admin review.');
+            document.getElementById('room-card')?.classList.add('hidden');
+            document.getElementById('lobby-card')?.classList.remove('hidden');
+            loadBattles();
+        } else {
+            alert(data.message || 'Error submitting result!');
+        }
+    } catch (err) {
+        console.error('Submit Result Error:', err);
+        alert('Server error submitting result!');
+    }
 }
 
 function cancelMatch() {
