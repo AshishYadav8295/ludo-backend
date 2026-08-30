@@ -238,7 +238,12 @@ function showWinUploadSection() {
     }
 }
 
-async function submitResult(status) {
+async function submitResult(event, status) {
+    // Prevent default form submit action (page reload stop karne ke liye)
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+
     const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
 
     if (!activeId) return alert('No active match found!');
@@ -274,7 +279,7 @@ async function submitResult(status) {
 
         if (data.success) {
             alert('Result submitted successfully!');
-            localStorage.removeItem('activeGameId'); // Reset active state
+            localStorage.removeItem('activeGameId'); 
             location.reload(); 
         } else {
             alert(data.message || 'Error submitting result!');
