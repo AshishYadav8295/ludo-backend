@@ -232,7 +232,7 @@ function showWinUploadSection() {
 async function submitResult(status) {
     if (!currentActiveGameId) return alert('No active match found!');
 
-    let screenshotBase64 = null;
+    let screenshotBase64 = "";
 
     if (status === 'win') {
         const fileInput = document.getElementById('screenshot-file');
@@ -240,7 +240,6 @@ async function submitResult(status) {
             return alert('Please select a win screenshot proof!');
         }
 
-        // Convert image file to Base64 String
         const file = fileInput.files[0];
         screenshotBase64 = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -256,7 +255,6 @@ async function submitResult(status) {
             body: JSON.stringify({
                 gameId: currentActiveGameId,
                 status: status,
-                userId: currentUser._id,
                 screenshot: screenshotBase64
             })
         });
@@ -265,9 +263,7 @@ async function submitResult(status) {
 
         if (data.success) {
             alert('Result submitted successfully!');
-            document.getElementById('room-card')?.classList.add('hidden');
-            document.getElementById('lobby-card')?.classList.remove('hidden');
-            if (typeof loadBattles === 'function') loadBattles();
+            location.reload(); // Fresh update for state reset
         } else {
             alert(data.message || 'Error submitting result!');
         }

@@ -221,7 +221,7 @@ router.post('/submit-result', async (req, res) => {
         await Game.findByIdAndUpdate(gameId, {
             resultStatus: status.toUpperCase(),
             status: 'review',
-            screenshot: screenshot || null
+            screenshot: screenshot || ""
         });
 
         return res.json({ success: true, message: 'Result submitted for review!' });
