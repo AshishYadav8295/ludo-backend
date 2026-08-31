@@ -16,7 +16,7 @@ try {
 
 // Page Load Initialization (Auto-Check Login State)
 document.addEventListener('DOMContentLoaded', () => {
-    updateUserUI();
+    checkInitialAuthState();
     loadOpenBattles();
     
     // Check active match
@@ -28,9 +28,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Strict Initial Auth Check Logic
+function checkInitialAuthState() {
+    const savedUser = localStorage.getItem('user');
+    
+    if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+        try {
+            window.loginedUser = JSON.parse(savedUser);
+            window.currentUser = window.loginedUser;
+            updateUserUI();
+        } catch (e) {
+            logoutUser();
+        }
+    } else {
+        window.loginedUser = null;
+        window.currentUser = null;
+        updateUserUI();
+    }
+}
+
 // Clean UI Render Handler
 function updateUserUI() {
-    const user = JSON.parse(localStorage.getItem('user')) || window.loginedUser;
+    const user = window.loginedUser || JSON.parse(localStorage.getItem('user'));
     const balanceElem = document.getElementById('walletBalance') || document.getElementById('user-balance');
     const userPhoneElem = document.getElementById('userPhone');
     
@@ -38,8 +57,9 @@ function updateUserUI() {
     const mainDashboard = document.getElementById('mainDashboard');
     const logoutBtn = document.getElementById('logout-btn');
 
-    if (user) {
+    if (user && user.phone) {
         window.loginedUser = user;
+        window.currentUser = user;
         const totalBalance = (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0);
         
         if (balanceElem) balanceElem.innerText = totalBalance;
@@ -53,6 +73,18 @@ function updateUserUI() {
         if (mainDashboard) mainDashboard.style.display = 'none';
         if (logoutBtn) logoutBtn.classList.add('hidden'); // Logout button chhupayega
     }
+}
+
+// LOGOUT FUNCTION (Proper Cache Clear & Reset)
+function logoutUser() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.clear();
+    window.loginedUser = null;
+    window.currentUser = null;
+    
+    updateUserUI();
+    window.location.reload();
 }
 
 // 1. LOGIN FUNCTION
