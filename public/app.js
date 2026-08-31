@@ -2,7 +2,9 @@ const socket = io(window.location.origin);
 let currentUser = null;
 let currentActiveGameId = localStorage.getItem('activeGameId') || null;
 
-// Page Load Handling
+// ==========================================
+// Initial Page Load & Auth State Management
+// ==========================================
 window.onload = () => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -26,14 +28,22 @@ function showLoginPage() {
 function showMainApp() {
     document.getElementById('auth-card')?.classList.add('hidden');
     document.getElementById('main-nav')?.classList.remove('hidden');
-    document.getElementById('lobby-card')?.classList.remove('hidden');
     document.getElementById('logout-btn')?.classList.remove('hidden');
     
     if (currentUser) {
         const totalBal = (currentUser.depositWallet || 0) + (currentUser.winningWallet || 0) + (currentUser.bonusWallet || 0);
-        document.getElementById('user-balance').innerText = currentUser.balance !== undefined ? currentUser.balance : totalBal;
+        const userBalElement = document.getElementById('user-balance');
+        if (userBalElement) {
+            userBalElement.innerText = currentUser.balance !== undefined ? currentUser.balance : totalBal;
+        }
     }
-    loadBattles();
+
+    // Check if player is already inside an active match session
+    if (currentActiveGameId) {
+        fetchActiveMatchDetails(currentActiveGameId);
+    } else {
+        showSection('lobby');
+    }
 }
 
 async function loginUser() {
@@ -73,8 +83,12 @@ function logoutUser() {
     showLoginPage();
 }
 
+// ==========================================
+// Navigation & Tab Switcher
+// ==========================================
 function showSection(sectionName) {
     document.getElementById('lobby-card')?.classList.add('hidden');
+    document.getElementById('room-card')?.classList.add('hidden');
     document.getElementById('withdraw-card')?.classList.add('hidden');
     document.getElementById('history-card')?.classList.add('hidden');
 
@@ -94,6 +108,9 @@ function showSection(sectionName) {
     }
 }
 
+// ==========================================
+// Battle Management System
+// ==========================================
 async function loadBattles() {
     try {
         const res = await fetch('/api/game/open-battles');
@@ -104,19 +121,24 @@ async function loadBattles() {
         listContainer.innerHTML = '';
 
         if (!battles || battles.length === 0) {
-            listContainer.innerHTML = '<p style="color: #9ca3af; font-size: 14px;">No open battles right now.</p>';
+            listContainer.innerHTML = '<p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px;">No open battles right now. Create one!</p>';
             return;
         }
 
         battles.forEach(game => {
+            const isMyGame = currentUser && game.createdBy === currentUser._id;
             const item = document.createElement('div');
-            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9fafb; margin-bottom: 10px; border-radius: 10px; border: 1px solid #f3f4f6;';
+            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #ffffff; margin-bottom: 10px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
+            
             item.innerHTML = `
                 <div>
-                    <strong style="font-size: 15px;">Entry: ₹${game.amount}</strong><br>
-                    <small style="color: #6b7280; font-size: 12px;">Created by: ${game.creatorPhone || 'Player'}</small>
+                    <strong style="font-size: 15px; color: #111827;">Entry: ₹${game.amount}</strong><br>
+                    <small style="color: #6b7280; font-size: 12px;">Host: ${game.creatorPhone || 'Player'}</small>
                 </div>
-                <button style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="joinBattle('${game._id}')">Play</button>
+                ${isMyGame ? 
+                    `<button style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="openRoomCard('${game._id}', ${game.amount})">Waiting...</button>` :
+                    `<button style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="joinBattle('${game._id}')">Play</button>`
+                }
             `;
             listContainer.appendChild(item);
         });
@@ -140,18 +162,13 @@ async function createBattle() {
         const data = await res.json();
 
         if (data.success) {
-            alert('Battle created successfully!');
+            alert('Battle created! Waiting for player to join...');
             amountInput.value = '';
             
             if (data.game && data.game._id) {
                 currentActiveGameId = data.game._id;
                 localStorage.setItem('activeGameId', data.game._id);
-
-                document.getElementById('lobby-card')?.classList.add('hidden');
-                document.getElementById('room-card')?.classList.remove('hidden');
-                if (document.getElementById('match-amount')) {
-                    document.getElementById('match-amount').innerText = data.game.amount;
-                }
+                openRoomCard(data.game._id, data.game.amount);
             }
 
             if (data.updatedBalance !== undefined) {
@@ -160,9 +177,10 @@ async function createBattle() {
             }
             loadBattles();
         } else {
-            alert(data.message);
+            alert(data.message || 'Failed to create battle.');
         }
     } catch (err) {
+        console.error('Create Battle Error:', err);
         alert('Error creating battle!');
     }
 }
@@ -186,17 +204,76 @@ async function joinBattle(gameId) {
                 currentUser.balance = data.updatedBalance;
                 document.getElementById('user-balance').innerText = data.updatedBalance;
             }
-            alert('Match successfully joined!');
-            document.getElementById('lobby-card')?.classList.add('hidden');
-            document.getElementById('room-card')?.classList.remove('hidden');
-            if (document.getElementById('match-amount')) {
-                document.getElementById('match-amount').innerText = data.game.amount;
-            }
+            alert('Match joined successfully!');
+            openRoomCard(data.game._id, data.game.amount, data.game.roomCode);
         } else {
-            alert(data.message);
+            alert(data.message || 'Failed to join battle.');
         }
     } catch (err) {
+        console.error('Join Battle Error:', err);
         alert('Error accepting battle!');
+    }
+}
+
+function openRoomCard(gameId, amount, roomCode = "") {
+    document.getElementById('lobby-card')?.classList.add('hidden');
+    document.getElementById('withdraw-card')?.classList.add('hidden');
+    document.getElementById('history-card')?.classList.add('hidden');
+    document.getElementById('room-card')?.classList.remove('hidden');
+
+    if (document.getElementById('match-amount')) {
+        document.getElementById('match-amount').innerText = amount;
+    }
+
+    const roomCodeInput = document.getElementById('room-code-input');
+    if (roomCodeInput) {
+        roomCodeInput.value = roomCode || "";
+    }
+}
+
+async function fetchActiveMatchDetails(gameId) {
+    try {
+        const res = await fetch(`/api/game/details/${gameId}`);
+        const data = await res.json();
+        if (data.success && data.game) {
+            openRoomCard(data.game._id, data.game.amount, data.game.roomCode);
+        } else {
+            localStorage.removeItem('activeGameId');
+            currentActiveGameId = null;
+            showSection('lobby');
+        }
+    } catch (err) {
+        showSection('lobby');
+    }
+}
+
+// ==========================================
+// Room Code & Result Submission Logic
+// ==========================================
+async function submitRoomCode() {
+    const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
+    const roomCodeInput = document.getElementById('room-code-input');
+    const roomCode = roomCodeInput ? roomCodeInput.value.trim() : '';
+
+    if (!activeId) return alert('No active match session found!');
+    if (!roomCode) return alert('Please enter Ludo King Room Code!');
+
+    try {
+        const res = await fetch('/api/game/update-roomcode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameId: activeId, roomCode })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert('Room code updated successfully!');
+        } else {
+            alert(data.message || 'Failed to update Room Code.');
+        }
+    } catch (err) {
+        console.error('Room Code Error:', err);
+        alert('Server connection error while saving Room Code!');
     }
 }
 
@@ -239,7 +316,7 @@ async function submitResult(event, status) {
 
         const data = await res.json();
         if (data.success) {
-            alert('Result submitted successfully!');
+            alert('Result submitted successfully! Waiting for admin review.');
             localStorage.removeItem('activeGameId');
             currentActiveGameId = null;
             location.reload();
@@ -253,7 +330,7 @@ async function submitResult(event, status) {
 }
 
 function cancelMatch() {
-    if (confirm('Are you sure you want to cancel?')) {
+    if (confirm('Are you sure you want to cancel or leave this room?')) {
         localStorage.removeItem('activeGameId');
         currentActiveGameId = null;
         if (document.getElementById('screenshot-file')) document.getElementById('screenshot-file').value = '';
