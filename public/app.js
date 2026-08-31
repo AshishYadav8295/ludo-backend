@@ -215,6 +215,12 @@ function openRoomCard(gameId, amount, roomCode = "") {
     if (roomCodeInput) {
         roomCodeInput.value = roomCode || "";
     }
+
+    if (roomCode) {
+        document.getElementById('result-submission-box')?.classList.remove('hidden');
+    } else {
+        document.getElementById('result-submission-box')?.classList.add('hidden');
+    }
 }
 
 async function fetchActiveMatchDetails(gameId) {
@@ -251,6 +257,8 @@ async function submitRoomCode() {
 
         if (data.success) {
             alert('Room code updated successfully!');
+            // ROOM CODE SUBMIT HOTE HI RESULT BOX ACTIVE HO JAYEGA
+            document.getElementById('result-submission-box')?.classList.remove('hidden');
         } else {
             alert(data.message || 'Failed to update Room Code.');
         }

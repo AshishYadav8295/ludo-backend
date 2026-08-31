@@ -278,48 +278,44 @@
             </div>
 
             <!-- 3. Match Started / Room Code Card -->
-            <div id="room-card" class="card hidden">
-                <h3><i class="fa-solid fa-gamepad" style="color: #4f46e5;"></i> Match Started!</h3>
-                <p style="margin-bottom: 12px; font-weight: 500;">Battle Amount: ₹<span id="match-amount" style="color: #10b981;">0</span></p>
-                
-                <!-- Room Code Input Section -->
-                <div id="room-code-input-section">
-                    <input type="text" id="room-code-input" class="custom-input" placeholder="Enter Ludo King Room Code">
-                    <button type="button" id="submit-room-code-btn" onclick="submitRoomCode()" class="btn-primary">
-                        Submit Room Code
-                    </button>
-                </div>
+            <!-- ROOM CARD SECTION -->
+<div id="room-card" class="card hidden">
+    <h3 style="text-align: center; margin-bottom: 15px; color: #1e293b;">Match Started!</h3>
+    <p style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
+        Battle Amount: ₹<span id="match-amount">0</span>
+    </p>
 
-                <!-- Room Code Display & Play Controls -->
-                <div id="submitted-room-code-container" class="room-code-box" style="display: none;">
-                    <span style="font-size: 12px; color: #065f46; font-weight: 600; text-transform: uppercase;">Room Code</span>
-                    <div id="display-room-code" class="room-code-text">------</div>
-                    
-                    <a href="intent://ludo/#Intent;scheme=ludoking;package=com.ludo.king;end" target="_blank" class="btn-open-app">
-                        <i class="fa-solid fa-play"></i> Open Ludo King App
-                    </a>
+    <!-- STEP 1: Room Code Box -->
+    <div id="room-code-box">
+        <input type="text" id="room-code-input" placeholder="Enter Ludo King Room Code" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;">
+        <button onclick="submitRoomCode()" style="width: 100%; background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            Submit Room Code
+        </button>
+    </div>
 
-                    <!-- Result Actions -->
-                    <div class="result-actions">
-                        <button type="button" onclick="showWinUploadSection()" class="btn-win"><i class="fa-solid fa-trophy"></i> I Won</button>
-                        <button type="button" onclick="submitResult('lose')" class="btn-lose"><i class="fa-solid fa-thumbs-down"></i> I Lost</button>
-                    </div>
+    <!-- STEP 2: Result Submission Box (Initially Hidden) -->
+    <div id="result-submission-box" class="hidden" style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 20px;">
+        <h4 style="text-align: center; margin-bottom: 15px; color: #334155;">Declare Match Result</h4>
 
-                    <!-- Screenshot Upload Box for Win -->
-                    <div id="win-upload-section" style="display: none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 12px; text-align: left;">
-                        <label style="font-size: 13px; font-weight: 600; color: #374151;">Upload Winning Screenshot:</label>
-                        <input type="file" id="screenshot-file" accept="image/*" class="custom-input" style="margin-top: 6px;">
-                        <button type="button" onclick="submitResult(event, 'win')" class="btn-primary" style="background: #10b981;">
-                            Submit Proof & Claim Win
-                        </button>
-                    </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Upload Winning Screenshot:</label>
+            <input type="file" id="screenshot-file" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+        </div>
 
-                    <!-- Cancel Match Button -->
-                    <button type="button" onclick="cancelMatch()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        <i class="fa-solid fa-xmark"></i> Cancel Match
-                    </button>
-                </div>
-            </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button onclick="submitResult(event, 'win')" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                I Won 🎉
+            </button>
+            <button onclick="submitResult(event, 'lose')" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                I Lost ❌
+            </button>
+        </div>
+
+        <button onclick="cancelMatch()" style="width: 100%; background: #9ca3af; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Cancel / Leave Match
+        </button>
+    </div>
+</div>
 
             <!-- 4. Withdraw Card -->
             <div id="withdraw-card" class="card hidden">
