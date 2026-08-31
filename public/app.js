@@ -2,7 +2,6 @@ const socket = io(window.location.origin);
 let currentUser = null;
 let currentActiveGameId = localStorage.getItem('activeGameId') || null;
 
-// Page Load Handling
 window.onload = () => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -147,7 +146,6 @@ async function createBattle() {
                 currentActiveGameId = data.game._id;
                 localStorage.setItem('activeGameId', data.game._id);
 
-                // Open Room Card View for Creator
                 document.getElementById('lobby-card')?.classList.add('hidden');
                 document.getElementById('room-card')?.classList.remove('hidden');
                 if (document.getElementById('match-amount')) {
@@ -201,7 +199,6 @@ async function joinBattle(gameId) {
     }
 }
 
-// Submit Result Function
 async function submitResult(event, status) {
     if (event && event.preventDefault) {
         event.preventDefault();
@@ -254,7 +251,6 @@ async function submitResult(event, status) {
     }
 }
 
-// Cancel Match Function
 function cancelMatch() {
     if (confirm('Are you sure you want to cancel?')) {
         localStorage.removeItem('activeGameId');
