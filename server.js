@@ -17,7 +17,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 3. Database Connection Logic
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ludo-platform';
 
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5000 // 5 second timeout taaki request hang na ho
+})
     .then(() => {
         console.log('====================================');
         console.log('MongoDB Connected Successfully!');
