@@ -3,28 +3,26 @@ const router = express.Router();
 const Game = require('../models/Game');
 const User = require('../models/User');
 
-// 1. Get all open battles
+// 1. Get Open Battles
 router.get('/open-battles', async (req, res) => {
     try {
         const battles = await Game.find({ status: 'open' }).sort({ createdAt: -1 });
         res.json({ success: true, battles });
     } catch (error) {
-        console.error('Error fetching battles:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
-// 2. Create Battle (Safely deducts balance using Atomic Operations)
+// 2. Create Battle
 router.post('/create-battle', async (req, res) => {
     try {
         const { amount, userId } = req.body;
         const numAmount = Number(amount);
 
         if (!numAmount || numAmount < 10) {
-            return res.status(400).json({ success: false, message: 'Minimum battle amount ₹10 honi chahiye.' });
+            return res.status(400).json({ success: false, message: 'Minimum battle amount is ₹10' });
         }
 
-        // Check & Deduct from deposit wallet safely
         const user = await User.findOneAndUpdate(
             { _id: userId, depositWallet: { $gte: numAmount } },
             { $inc: { depositWallet: -numAmount } },
@@ -32,7 +30,7 @@ router.post('/create-battle', async (req, res) => {
         );
 
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Insufficient deposit balance or user not found!' });
+            return res.status(400).json({ success: false, message: 'Insufficient balance or User invalid!' });
         }
 
         const newGame = new Game({
@@ -51,8 +49,7 @@ router.post('/create-battle', async (req, res) => {
             updatedBalance: (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0)
         });
     } catch (error) {
-        console.error('Error creating battle:', error);
-        res.status(500).json({ success: false, message: 'Server error creating battle' });
+        res.status(500).json({ success: false, message: 'Error creating battle' });
     }
 });
 
@@ -60,17 +57,16 @@ router.post('/create-battle', async (req, res) => {
 router.post('/join-battle', async (req, res) => {
     try {
         const { gameId, userId } = req.body;
-
         const game = await Game.findById(gameId);
+
         if (!game || game.status !== 'open') {
-            return res.status(400).json({ success: false, message: 'Battle already started or closed' });
+            return res.status(400).json({ success: false, message: 'Battle active nahi hai.' });
         }
 
         if (game.createdBy.toString() === userId) {
-            return res.status(400).json({ success: false, message: 'You cannot join your own battle' });
+            return res.status(400).json({ success: false, message: 'Apni hi battle join nahi kar sakte!' });
         }
 
-        // Deduct join fee safely
         const user = await User.findOneAndUpdate(
             { _id: userId, depositWallet: { $gte: game.amount } },
             { $inc: { depositWallet: -game.amount } },
@@ -78,7 +74,7 @@ router.post('/join-battle', async (req, res) => {
         );
 
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Insufficient balance to join' });
+            return res.status(400).json({ success: false, message: 'Insufficient balance to join!' });
         }
 
         game.joinedBy = user._id;
@@ -88,12 +84,11 @@ router.post('/join-battle', async (req, res) => {
 
         res.json({
             success: true,
-            game: game,
+            game,
             updatedBalance: (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0)
         });
     } catch (error) {
-        console.error('Error joining battle:', error);
-        res.status(500).json({ success: false, message: 'Server error joining battle' });
+        res.status(500).json({ success: false, message: 'Error joining battle' });
     }
 });
 
@@ -101,65 +96,40 @@ router.post('/join-battle', async (req, res) => {
 router.post('/update-roomcode', async (req, res) => {
     try {
         const { gameId, roomCode } = req.body;
-        const game = await Game.findByIdAndUpdate(
-            gameId,
-            { roomCode: roomCode },
-            { new: true }
-        );
-
-        if (!game) {
-            return res.status(404).json({ success: false, message: 'Game not found' });
-        }
-
-        res.json({
-            success: true,
-            message: 'Room code updated successfully',
-            game: game
-        });
-    } catch (error) {
-        console.error('Error updating room code:', error);
-        res.status(500).json({ success: false, message: 'Server error updating room code' });
-    }
-});
-
-// 5. Get Single Battle Details
-router.get('/details/:id', async (req, res) => {
-    try {
-        const game = await Game.findById(req.params.id);
-        if (!game) return res.status(404).json({ success: false, message: 'Game not found' });
+        const game = await Game.findByIdAndUpdate(gameId, { roomCode }, { new: true });
         res.json({ success: true, game });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Error updating room code' });
     }
 });
 
-// 6. Submit Result
+// 5. Submit Game Result (Base64 Large Upload Allowed)
 router.post('/submit-result', async (req, res) => {
     try {
         const { gameId, status, screenshot } = req.body;
-
         const updatedGame = await Game.findByIdAndUpdate(
             gameId,
-            {
-                status: 'review',
-                resultStatus: status.toUpperCase(),
-                screenshot: screenshot || ""
-            },
+            { status: 'review', resultStatus: status.toUpperCase(), screenshot: screenshot || '' },
             { new: true }
         );
 
-        if (!updatedGame) {
-            return res.status(404).json({ success: false, message: 'Game not found' });
-        }
-
-        res.json({
-            success: true,
-            message: 'Result submitted successfully',
-            game: updatedGame
-        });
+        res.json({ success: true, message: 'Result submitted for Admin Review!', game: updatedGame });
     } catch (error) {
-        console.error('Submit Result Error:', error);
-        res.status(500).json({ success: false, message: 'Server error submitting result' });
+        res.status(500).json({ success: false, message: 'Error submitting result' });
+    }
+});
+
+// 6. Admin: Pending Reviews Fetch
+router.get('/pending-reviews', async (req, res) => {
+    try {
+        const games = await Game.find({ status: 'review' })
+            .populate('createdBy', 'phone')
+            .populate('joinedBy', 'phone')
+            .sort({ updatedAt: -1 });
+
+        res.json({ success: true, reviews: games });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching reviews' });
     }
 });
 
