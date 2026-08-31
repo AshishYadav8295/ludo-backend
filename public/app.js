@@ -2,6 +2,7 @@ const socket = io(window.location.origin);
 let currentUser = null;
 let currentActiveGameId = localStorage.getItem('activeGameId') || null;
 
+// Page Load Handling
 window.onload = () => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
