@@ -13,20 +13,20 @@ router.post('/withdraw-request', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Minimum withdrawal ₹50 hai.' });
         }
 
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ success: false, message: 'User nahi mila.' });
+        // Deduct balance atomically from winningWallet
+        const user = await User.findOneAndUpdate(
+            { _id: userId, winningWallet: { $gte: withdrawAmount } },
+            { $inc: { winningWallet: -withdrawAmount } },
+            { new: true }
+        );
 
-        if (user.winWallet < withdrawAmount) {
-            return res.status(400).json({ success: false, message: 'Winning wallet mein balance kam hai.' });
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Winning wallet mein balance kam hai ya user nahi mila.' });
         }
-
-        // Deduct balance from winning wallet temporary
-        user.winWallet -= withdrawAmount;
-        await user.save();
 
         // Create Pending Transaction
         const txn = new Transaction({
-            userId: userId, // 'user' ki jagah 'userId' karein
+            userId: user._id,
             type: 'WITHDRAWAL',
             amount: withdrawAmount,
             status: 'PENDING',
@@ -54,7 +54,7 @@ router.get('/history/:userId', async (req, res) => {
 router.get('/pending-withdrawals', async (req, res) => {
     try {
         const list = await Transaction.find({ type: 'WITHDRAWAL', status: 'PENDING' })
-            .populate('user', 'phone')
+            .populate('userId', 'phone')
             .sort({ createdAt: -1 });
         res.json({ success: true, list });
     } catch (err) {
@@ -78,8 +78,8 @@ router.post('/process-withdrawal', async (req, res) => {
         } else {
             txn.status = 'REJECTED';
             txn.remark = 'Rejected by Admin. Amount refunded.';
-            // Balance Refund
-            await User.findByIdAndUpdate(txn.user, { $inc: { winWallet: txn.amount } });
+            // Balance Refund back to winningWallet
+            await User.findByIdAndUpdate(txn.userId, { $inc: { winningWallet: txn.amount } });
         }
 
         await txn.save();
