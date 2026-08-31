@@ -1,49 +1,87 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
 
-// Login / Register Route
+// User Login / Registration Route
 router.post('/login', async (req, res) => {
     try {
         const { phone } = req.body;
-        if (!phone || phone.length !== 10) {
-            return res.status(400).json({ success: false, message: 'Kripya 10-digit phone number enter karein.' });
-        }
 
-        let user = await User.findOne({ phone });
-        if (!user) {
-            user = await User.create({
-                phone,
-                depositWallet: 100,
-                winningWallet: 0,
-                bonusWallet: 0
+        if (!phone || phone.trim().length < 10) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Kripya sahi 10-digit mobile number darj karein.' 
             });
         }
 
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET || 'secret_key',
-            { expiresIn: '7d' }
-        );
+        const cleanPhone = phone.trim();
 
-        res.json({
+        // Check if user exists or create new one
+        let user = await User.findOne({ phone: cleanPhone });
+
+        if (!user) {
+            user = new User({
+                phone: cleanPhone,
+                name: 'Player_' + cleanPhone.slice(-4),
+                depositWallet: 100, // Welcome Bonus
+                winningWallet: 0,
+                bonusWallet: 0,
+                role: 'user'
+            });
+            await user.save();
+        }
+
+        const totalBalance = (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0);
+
+        res.status(200).json({
             success: true,
-            message: 'Login Successful',
-            token,
+            message: 'Login successful!',
             user: {
                 _id: user._id,
                 phone: user.phone,
+                name: user.name,
                 depositWallet: user.depositWallet,
                 winningWallet: user.winningWallet,
                 bonusWallet: user.bonusWallet,
-                role: user.role,
-                balance: user.balance
+                balance: totalBalance,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Auth Login Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server Login Error: ' + error.message 
+        });
+    }
+});
+
+// Fetch User Profile Data
+router.get('/user/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const totalBalance = (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0);
+
+        res.json({
+            success: true,
+            user: {
+                _id: user._id,
+                phone: user.phone,
+                name: user.name,
+                depositWallet: user.depositWallet,
+                winningWallet: user.winningWallet,
+                bonusWallet: user.bonusWallet,
+                balance: totalBalance,
+                role: user.role
             }
         });
     } catch (error) {
-        console.error('Auth Error:', error);
-        res.status(500).json({ success: false, message: 'Server error! Login nahi ho paya.' });
+        res.status(500).json({ success: false, message: 'Error fetching user profile' });
     }
 });
 
