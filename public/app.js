@@ -2,9 +2,6 @@ const socket = io(window.location.origin);
 let currentUser = null;
 let currentActiveGameId = localStorage.getItem('activeGameId') || null;
 
-// ==========================================
-// Initial Page Load & Auth State Management
-// ==========================================
 window.onload = () => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -38,7 +35,6 @@ function showMainApp() {
         }
     }
 
-    // Check if player is already inside an active match session
     if (currentActiveGameId) {
         fetchActiveMatchDetails(currentActiveGameId);
     } else {
@@ -83,9 +79,6 @@ function logoutUser() {
     showLoginPage();
 }
 
-// ==========================================
-// Navigation & Tab Switcher
-// ==========================================
 function showSection(sectionName) {
     document.getElementById('lobby-card')?.classList.add('hidden');
     document.getElementById('room-card')?.classList.add('hidden');
@@ -108,9 +101,6 @@ function showSection(sectionName) {
     }
 }
 
-// ==========================================
-// Battle Management System
-// ==========================================
 async function loadBattles() {
     try {
         const res = await fetch('/api/game/open-battles');
@@ -126,7 +116,7 @@ async function loadBattles() {
         }
 
         battles.forEach(game => {
-            const isMyGame = currentUser && game.createdBy === currentUser._id;
+            const isMyGame = currentUser && (game.createdBy === currentUser._id || game.createdBy._id === currentUser._id);
             const item = document.createElement('div');
             item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #ffffff; margin-bottom: 10px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
             
@@ -136,7 +126,7 @@ async function loadBattles() {
                     <small style="color: #6b7280; font-size: 12px;">Host: ${game.creatorPhone || 'Player'}</small>
                 </div>
                 ${isMyGame ? 
-                    `<button style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="openRoomCard('${game._id}', ${game.amount})">Waiting...</button>` :
+                    `<button style="background: #9ca3af; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: not-allowed;" disabled>Waiting for Opponent...</button>` :
                     `<button style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="joinBattle('${game._id}')">Play</button>`
                 }
             `;
@@ -162,20 +152,16 @@ async function createBattle() {
         const data = await res.json();
 
         if (data.success) {
-            alert('Battle created! Waiting for player to join...');
+            alert('Battle created! Waiting for another player to join...');
             amountInput.value = '';
-            
-            if (data.game && data.game._id) {
-                currentActiveGameId = data.game._id;
-                localStorage.setItem('activeGameId', data.game._id);
-                openRoomCard(data.game._id, data.game.amount);
-            }
 
             if (data.updatedBalance !== undefined) {
                 currentUser.balance = data.updatedBalance;
                 document.getElementById('user-balance').innerText = data.updatedBalance;
             }
-            loadBattles();
+
+            // Stay in Lobby until someone joins
+            showSection('lobby');
         } else {
             alert(data.message || 'Failed to create battle.');
         }
@@ -235,7 +221,7 @@ async function fetchActiveMatchDetails(gameId) {
     try {
         const res = await fetch(`/api/game/details/${gameId}`);
         const data = await res.json();
-        if (data.success && data.game) {
+        if (data.success && data.game && data.game.status === 'running') {
             openRoomCard(data.game._id, data.game.amount, data.game.roomCode);
         } else {
             localStorage.removeItem('activeGameId');
@@ -247,9 +233,6 @@ async function fetchActiveMatchDetails(gameId) {
     }
 }
 
-// ==========================================
-// Room Code & Result Submission Logic
-// ==========================================
 async function submitRoomCode() {
     const activeId = currentActiveGameId || localStorage.getItem('activeGameId');
     const roomCodeInput = document.getElementById('room-code-input');

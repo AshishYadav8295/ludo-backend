@@ -93,6 +93,42 @@ router.post('/join-battle', async (req, res) => {
     }
 });
 
+// Update Room Code (Naya Endpoint - Fixing Error)
+router.post('/update-roomcode', async (req, res) => {
+    try {
+        const { gameId, roomCode } = req.body;
+        const game = await Game.findByIdAndUpdate(
+            gameId,
+            { roomCode: roomCode },
+            { new: true }
+        );
+
+        if (!game) {
+            return res.status(404).json({ success: false, message: 'Game not found' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Room code updated successfully',
+            game: game
+        });
+    } catch (error) {
+        console.error('Error updating room code:', error);
+        res.status(500).json({ success: false, message: 'Server error updating room code' });
+    }
+});
+
+// Get Single Battle Details
+router.get('/details/:id', async (req, res) => {
+    try {
+        const game = await Game.findById(req.params.id);
+        if (!game) return res.status(404).json({ success: false });
+        res.json({ success: true, game });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
 // Submit Result
 router.post('/submit-result', async (req, res) => {
     try {
