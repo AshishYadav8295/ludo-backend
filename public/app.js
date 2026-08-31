@@ -28,12 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Update UI Function (Toggles Login Card vs Dashboard)
-// Safe UI Update Function (Fixes Blank Screen)
+// Clean UI Render Handler
 function updateUserUI() {
     const user = JSON.parse(localStorage.getItem('user')) || window.loginedUser;
     const balanceElem = document.getElementById('walletBalance') || document.getElementById('userBalance');
     const userPhoneElem = document.getElementById('userPhone');
+    
+    const loginSection = document.getElementById('loginSection');
+    const mainDashboard = document.getElementById('mainDashboard');
 
     if (user) {
         window.loginedUser = user;
@@ -42,12 +44,11 @@ function updateUserUI() {
         if (balanceElem) balanceElem.innerText = `₹${totalBalance}`;
         if (userPhoneElem) userPhoneElem.innerText = user.phone;
 
-        // Login Card Hide and Main Dashboard Show
-        const cardHeader = document.querySelector('.card h4, .card h3, .card-header');
-        if (cardHeader && cardHeader.innerText.toLowerCase().includes('login')) {
-            const loginCard = cardHeader.closest('.card');
-            if (loginCard) loginCard.style.display = 'none';
-        }
+        if (loginSection) loginSection.style.display = 'none';
+        if (mainDashboard) mainDashboard.style.display = 'block';
+    } else {
+        if (loginSection) loginSection.style.display = 'block';
+        if (mainDashboard) mainDashboard.style.display = 'none';
     }
 }
 
