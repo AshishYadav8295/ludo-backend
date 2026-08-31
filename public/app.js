@@ -14,12 +14,12 @@ try {
     console.warn('Socket initialization failed, continuing without real-time updates.');
 }
 
-// Page Load Initialization
+// Page Load Initialization (Auto-Check Login State)
 document.addEventListener('DOMContentLoaded', () => {
     updateUserUI();
     loadOpenBattles();
     
-    // Check if active match page
+    // Check active match
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('id');
     if (gameId) {
@@ -28,20 +28,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Update UI with Logged In User Info
+// Update UI Function (Toggles Login Card vs Dashboard)
 function updateUserUI() {
-    const user = window.loginedUser;
+    const user = JSON.parse(localStorage.getItem('user')) || window.loginedUser;
     const balanceElem = document.getElementById('walletBalance') || document.getElementById('userBalance');
     const userPhoneElem = document.getElementById('userPhone');
+    const loginSection = document.getElementById('loginSection') || document.querySelector('.card'); // Selects login container
+    const mainDashboard = document.getElementById('mainDashboard') || document.getElementById('dashboardSection');
 
     if (user) {
+        window.loginedUser = user;
         const totalBalance = (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0);
+        
         if (balanceElem) balanceElem.innerText = `₹${totalBalance}`;
         if (userPhoneElem) userPhoneElem.innerText = user.phone;
         
-        // Hide login modal/form if logged in
-        const loginSection = document.getElementById('loginSection');
-        if (loginSection) loginSection.style.display = 'none';
+        // Hide Login Card completely on success
+        if (loginSection && loginSection.innerText.includes('Login')) {
+            loginSection.style.display = 'none';
+        }
+        if (mainDashboard) {
+            mainDashboard.style.display = 'block';
+        }
+    } else {
+        if (loginSection) loginSection.style.display = 'block';
+        if (mainDashboard) mainDashboard.style.display = 'none';
     }
 }
 
