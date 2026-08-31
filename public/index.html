@@ -162,68 +162,6 @@
             transform: scale(0.98);
         }
 
-        .room-code-box {
-            background: #ecfdf5;
-            border: 1px dashed #10b981;
-            padding: 16px;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .room-code-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: #047857;
-            letter-spacing: 2px;
-            margin: 6px 0 12px 0;
-            word-break: break-all;
-        }
-
-        .btn-open-app {
-            display: inline-block;
-            width: 100%;
-            background: #2563eb;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
-            margin-bottom: 12px;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-win {
-            flex: 1;
-            padding: 12px;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
-        }
-
-        .btn-lose {
-            flex: 1;
-            padding: 12px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.25);
-        }
-
         .hidden { display: none !important; }
     </style>
 </head>
@@ -238,35 +176,33 @@
             <div class="header-actions">
                 <div class="wallet-badge">
                     <i class="fa-solid fa-wallet" style="color: #fbbf24;"></i> 
-                    ₹<span id="walletBalance"><span id="user-balance">0</span></span>
+                    ₹<span id="walletBalance">0</span>
                 </div>
-                <button id="logout-btn" class="btn-logout hidden" onclick="logoutUser()"><i class="fa-solid fa-power-off"></i></button>
+                <button id="logout-btn" class="btn-logout hidden" onclick="logoutUser()"><i class="fa-solid fa-power-off"></i> Logout</button>
             </div>
         </header>
 
         <div class="content">
 
-            <!-- 1. Authentication / Login Card -->
-            <div id="loginSection">
-                <div id="auth-card" class="card">
-                    <h3>Login / Register</h3>
-                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Enter your phone number to continue</p>
-                    <input type="tel" id="phoneInput" class="custom-input" placeholder="Enter 10-digit Phone Number" maxlength="10">
-                    <button type="button" onclick="loginUser()" class="btn-primary">Continue</button>
-                </div>
+            <!-- 1. AUTH / LOGIN SECTION -->
+            <div id="loginSection" class="card">
+                <h3>Login / Register</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Enter your phone number to continue</p>
+                <input type="tel" id="phoneInput" class="custom-input" placeholder="Enter 10-digit Phone Number" maxlength="10">
+                <button type="button" onclick="loginUser()" class="btn-primary">Continue</button>
             </div>
 
-            <!-- Main Dashboard Container -->
-            <div id="mainDashboard" class="hidden">
+            <!-- 2. MAIN DASHBOARD SECTION -->
+            <div id="mainDashboard" style="display: none;">
 
-                <!-- Main App Nav Tabs -->
+                <!-- Nav Tabs -->
                 <div id="main-nav" class="nav-tabs">
                     <button class="tab-btn active" onclick="showSection('lobby')">Battles</button>
                     <button class="tab-btn" onclick="showSection('withdraw')">Withdraw</button>
                     <button class="tab-btn" onclick="showSection('history')">Passbook</button>
                 </div>
 
-                <!-- 2. Battles Lobby Card -->
+                <!-- Battles Lobby -->
                 <div id="lobby-card">
                     <div class="card">
                         <h3>Create Challenge</h3>
@@ -282,46 +218,37 @@
                     </div>
                 </div>
 
-                <!-- 3. Match Started / Room Code Card -->
+                <!-- Room Card -->
                 <div id="room-card" class="card hidden">
                     <h3 style="text-align: center; margin-bottom: 15px; color: #1e293b;">Match Started!</h3>
                     <p style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
                         Battle Amount: ₹<span id="match-amount">0</span>
                     </p>
 
-                    <!-- STEP 1: Room Code Box -->
                     <div id="room-code-box">
-                        <input type="text" id="room-code-input" placeholder="Enter Ludo King Room Code" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;">
+                        <input type="text" id="room-code-input" placeholder="Enter Ludo King Room Code" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px;">
                         <button onclick="submitRoomCode()" style="width: 100%; background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                             Submit Room Code
                         </button>
                     </div>
 
-                    <!-- STEP 2: Result Submission Box (Initially Hidden) -->
                     <div id="result-submission-box" class="hidden" style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 20px;">
                         <h4 style="text-align: center; margin-bottom: 15px; color: #334155;">Declare Match Result</h4>
-
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600;">Upload Winning Screenshot:</label>
-                            <input type="file" id="screenshot-file" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="file" id="screenshot-file" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
                         </div>
 
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <button onclick="submitResult(event, 'win')" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                I Won 🎉
-                            </button>
-                            <button onclick="submitResult(event, 'lose')" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                I Lost ❌
-                            </button>
+                            <button onclick="submitResult(event, 'win')" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">I Won 🎉</button>
+                            <button onclick="submitResult(event, 'lose')" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">I Lost ❌</button>
                         </div>
 
-                        <button onclick="cancelMatch()" style="width: 100%; background: #9ca3af; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                            Cancel / Leave Match
-                        </button>
+                        <button onclick="cancelMatch()" style="width: 100%; background: #9ca3af; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel / Leave Match</button>
                     </div>
                 </div>
 
-                <!-- 4. Withdraw Card -->
+                <!-- Withdraw Card -->
                 <div id="withdraw-card" class="card hidden">
                     <h3>Withdraw Earnings</h3>
                     <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Transfer money directly to your UPI ID</p>
@@ -330,7 +257,7 @@
                     <button type="button" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">Withdraw Now</button>
                 </div>
 
-                <!-- 5. History / Passbook Card -->
+                <!-- History Card -->
                 <div id="history-card" class="card hidden">
                     <h3>Transaction History</h3>
                     <p style="color: #9ca3af; font-size: 14px;">No recent transactions.</p>
