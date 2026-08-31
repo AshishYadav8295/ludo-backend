@@ -31,24 +31,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // Clean UI Render Handler
 function updateUserUI() {
     const user = JSON.parse(localStorage.getItem('user')) || window.loginedUser;
-    const balanceElem = document.getElementById('walletBalance') || document.getElementById('userBalance');
+    const balanceElem = document.getElementById('walletBalance') || document.getElementById('user-balance');
     const userPhoneElem = document.getElementById('userPhone');
     
     const loginSection = document.getElementById('loginSection');
     const mainDashboard = document.getElementById('mainDashboard');
+    const logoutBtn = document.getElementById('logout-btn');
 
     if (user) {
         window.loginedUser = user;
         const totalBalance = (user.depositWallet || 0) + (user.winningWallet || 0) + (user.bonusWallet || 0);
         
-        if (balanceElem) balanceElem.innerText = `₹${totalBalance}`;
+        if (balanceElem) balanceElem.innerText = totalBalance;
         if (userPhoneElem) userPhoneElem.innerText = user.phone;
 
         if (loginSection) loginSection.style.display = 'none';
         if (mainDashboard) mainDashboard.style.display = 'block';
+        if (logoutBtn) logoutBtn.classList.remove('hidden'); // Logout button dikhayega
     } else {
         if (loginSection) loginSection.style.display = 'block';
         if (mainDashboard) mainDashboard.style.display = 'none';
+        if (logoutBtn) logoutBtn.classList.add('hidden'); // Logout button chhupayega
     }
 }
 
