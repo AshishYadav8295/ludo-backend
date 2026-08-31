@@ -1,5 +1,18 @@
-// Global State Variables
-window.loginedUser = JSON.parse(localStorage.getItem('user')) || null;
+// Global State Variables (Force fresh check)
+window.loginedUser = null;
+try {
+    const cachedUser = localStorage.getItem('user');
+    if (cachedUser && cachedUser !== "undefined" && cachedUser !== "null") {
+        const parsed = JSON.parse(cachedUser);
+        if (parsed && parsed.phone) {
+            window.loginedUser = parsed;
+        }
+    }
+} catch (e) {
+    localStorage.removeItem('user');
+}
+window.currentUser = window.loginedUser;
+window.currentActiveGameId = null;
 window.currentUser = window.loginedUser;
 window.currentActiveGameId = null;
 
