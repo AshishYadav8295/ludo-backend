@@ -126,7 +126,7 @@ async function loginUser() {
             window.currentUser = data.user;
 
             alert('Login Successful!');
-            location.reload();
+            location.reload();``
         } else {
             alert(data.message || 'Login Failed!');
         }
