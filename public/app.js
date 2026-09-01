@@ -305,11 +305,11 @@ async function submitWithdrawal() {
     const amount = amountInput.value;
     const upiId = upiInput ? upiInput.value : 'N/A';
 
-    const res = await fetch('/api/wallet/withdraw-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user._id, amount, upiId })
-    });
+    const response = await fetch('https://ludo-backend-xxm1.onrender.com/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone })
+});
 
     const data = await res.json();
     alert(data.message);
